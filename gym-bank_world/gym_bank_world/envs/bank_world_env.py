@@ -40,6 +40,9 @@ class BankWorldEnv(gym.Env):
         self.reward_bank = reward_bank
         self.wall_cost = wall_cost
         self.total_reward = 0
+        self.reward_list = [0] * self.no_of_agents
+        self.picked = [False] * self.no_of_agents
+        self.dropped = [False] * self.no_of_agents
         # World
         self.world = None
         self.obs_dict = None
@@ -77,6 +80,12 @@ class BankWorldEnv(gym.Env):
         #check and change the location of agents
 
         for i in range(self.no_of_agents):
+            if self.picked[i]:
+                self.reward_list[i] = 0
+                self.picked[i] = False
+            if self.dropped[i]:
+                self.reward_list[i] = 0
+                self.dropped[i] = False
             #j_gem is the gem that is acquired
             j_gem = self.obs_dict[f"A_{i}"][1]
             gem_same_flag = False
@@ -123,13 +132,16 @@ class BankWorldEnv(gym.Env):
         #Setting rewards
         for i in range(self.no_of_agents):
             pos_reward = False
+            curr_reward = 0
             for j in range(self.no_of_gems):
                 if self.obs_dict[f"A_{i}"][0][0] == self.obs_dict[f"Gem_{j}"][0][0] and self.obs_dict[f"A_{i}"][0][1] == self.obs_dict[f"Gem_{j}"][0][1]:
                     if self.obs_dict[f"Gem_{j}"][1] == -1 and not wall_flag and self.obs_dict[f"A_{i}"][2] == j:
                         self.obs_dict[f"A_{i}"][1] = j
                         self.obs_dict[f"Gem_{j}"][1] = i
                         self.total_reward += self.reward_gem
+                        curr_reward += self.reward_gem
                         pos_reward = True
+                        self.picked[i] = True
 
             #Bank Reward!
             if self.obs_dict[f"A_{i}"][1] != -1 and not wall_flag:
@@ -139,13 +151,18 @@ class BankWorldEnv(gym.Env):
                     self.obs_dict[f"A_{i}"][2] = -1
                     self.obs_dict[f"Gem_{j}"][0] = self.bank_loc
                     self.total_reward += self.reward_bank
+                    curr_reward += self.reward_bank
                     self.planner(i)
                     pos_reward = True
+                    self.dropped[i] = True
             if not pos_reward:
                 if wall_flag:
                     self.total_reward += self.step_cost + self.wall_cost
+                    curr_reward += self.step_cost + self.wall_cost
                 else:
                     self.total_reward += self.step_cost
+                    curr_reward += self.step_cost
+            self.reward_list[i] += curr_reward
 
         num_acquired = 0
         for j in range(self.no_of_gems):
@@ -165,6 +182,7 @@ class BankWorldEnv(gym.Env):
         self.world, self.obs_dict = world_gen(self.n, self.no_of_gems, self.no_of_agents)
         for i in range(self.no_of_agents):
             self.planner(i)
+            self.reward_list[i] = 0
 
     def render(self, mode="human"):
         #
