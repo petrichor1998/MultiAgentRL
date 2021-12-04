@@ -12,19 +12,19 @@ import pickle as pkl
 random.seed(21)
 np.random.seed(21)
 # Set learning parameters
-learning_rate = .01
-discount_factor = .99
+learning_rate = .5
+discount_factor = .9
 # num_test_episodes = 100
 # log_step = 10000
 # total_steps_per_task = 1500000  # 2e6
 # test_epsilon = 0.01
 
 
-def train(train_env, action_space=5, num_episodes=1000, q_path=None, verbose=False):
+def train(train_env, action_space=4, num_episodes=1000, q_path=None, verbose=False):
     # create lists to contain total rewards and steps per episode
     episode_rewards = []
-    # random_ep = np.arange(0.01, 0.9, 0.99 / (num_episodes * 10), dtype=float)[::-1]
-    random_ep = np.arange(0.01, 0.9, 0.001 , dtype=float)[::-1]
+    random_ep = np.arange(0.01, 0.9, 0.99 / (num_episodes), dtype=float)[::-1]
+    # random_ep = np.arange(0.01, 0.9, 0.01 , dtype=float)[::-1]
     i = 0
 
     QPickup = {}
@@ -75,11 +75,11 @@ def train(train_env, action_space=5, num_episodes=1000, q_path=None, verbose=Fal
             s = s_prime
 
 
-        # episode_rewards.append(train_env.total_reward)
-        # print(f"Episode {episode + 1} reward: ", train_env.total_reward)
-        # plt.clf()
-        # plt.plot(episode_rewards)
-        # plt.savefig("plot.png")
+        episode_rewards.append(train_env.total_reward)
+        print(f"Episode {episode + 1} reward: ", train_env.total_reward)
+        plt.clf()
+        plt.plot(episode_rewards)
+        plt.savefig("plot.png")
         if (episode + 1) % 10 == 0:
             with open(f"QTable_{episode + 1}.pkl","wb") as fi:
                 pkl.dump(Q_table, fi)
@@ -121,7 +121,7 @@ def update_qvalue(Q_table, action_space, obs, a_list, r_list, obs_prime, no_of_a
 
 def get_action(Q_table, action_space, ep, obs, no_of_agents):
     # if np.random.randn(0, 1) < ep:
-    if 0.5 < ep:
+    if random.random() < ep:
         action_list = [random.randint(0, action_space - 1) for i in range(no_of_agents)]
 
     else:
