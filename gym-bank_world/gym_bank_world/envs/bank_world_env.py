@@ -15,6 +15,7 @@ ACTION_LOOKUP = {
     1: 'move down',
     2: 'move left',
     3: 'move right',
+    4: "no op"
 }
 class BankWorldEnv(gym.Env):
     """Bankworld representation
@@ -28,7 +29,7 @@ class BankWorldEnv(gym.Env):
     """
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, n=10, no_of_agents = 2, no_of_gems = 3, max_steps=1000, reward_gem=50, step_cost=0, reward_bank=500, wall_cost = -5):
+    def __init__(self, n=10, no_of_agents = 2, no_of_gems = 3, max_steps=1000, reward_gem=50, step_cost=-1, reward_bank=500, wall_cost = -5):
         self.n = n
         self.no_of_agents = no_of_agents
         self.no_of_gems = no_of_gems
@@ -159,9 +160,10 @@ class BankWorldEnv(gym.Env):
                     self.total_reward += self.step_cost + self.wall_cost
                     curr_reward += self.step_cost + self.wall_cost
                 else:
-                    self.total_reward += self.step_cost
-                    curr_reward += self.step_cost
-            self.reward_list[i] += curr_reward
+                    if action_list[i] != 4:
+                        self.total_reward += self.step_cost
+                        curr_reward += self.step_cost
+            self.reward_list[i] = curr_reward
 
         num_acquired = 0
         for j in range(self.no_of_gems):

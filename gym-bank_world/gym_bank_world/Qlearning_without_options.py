@@ -27,9 +27,10 @@ def train(train_env, action_space=5, num_episodes=1000, q_path=None, verbose=Fal
     # random_ep = np.arange(0.01, 0.9, 0.01 , dtype=float)[::-1]
     i = 0
 
-    QPickup = {}
-    QDrop = {}
-    Q_table = [QPickup, QDrop]
+    # QPickup = {}
+    # QDrop = {}
+    # Q_table = [QPickup, QDrop]
+    Q_table = {}
     start_episode = 0
     if q_path is not None:
         start_episode = int(q_path.split('_')[-1].split('.')[0])
@@ -90,30 +91,18 @@ def update_qvalue(Q_table, action_space, obs, a_list, r_list, obs_prime, no_of_a
     for i in range(no_of_agents):
         a = a_list[i]
         r = r_list[i]
-        if obs[f"A_{i}"][1] == -1:
-            s_prime = get_state_representation(obs_prime, i, 'pick')
-            s = get_state_representation(obs, i, 'pick')
-            if s_prime in Q_table[0].keys():
-                q_next = Q_table[0][s_prime]
-            else:
-                q_next = np.zeros(action_space)
-                Q_table[0][s_prime] = q_next
-            if s not in Q_table[0].keys():
-                Q_table[0][s] = np.zeros(action_space)
 
-            Q_table[0][s][a] = Q_table[0][s][a] + learning_rate * (r + discount_factor * np.max(q_next) - Q_table[0][s][a])
+        s_prime = get_state_representation(obs_prime, i)
+        s = get_state_representation(obs, i)
+        if s_prime in Q_table.keys():
+            q_next = Q_table[s_prime]
         else:
-            s_prime = get_state_representation(obs_prime, i, 'drop')
-            s = get_state_representation(obs, i, 'drop')
-            if s_prime in Q_table[1].keys():
-                q_next = Q_table[1][s_prime]
-            else:
-                q_next = np.zeros(action_space)
-                Q_table[1][s_prime] = q_next
-            if s not in Q_table[1].keys():
-                Q_table[1][s] = np.zeros(action_space)
+            q_next = np.zeros(action_space)
+            Q_table[s_prime] = q_next
+        if s not in Q_table.keys():
+            Q_table[s] = np.zeros(action_space)
 
-            Q_table[1][s][a] = Q_table[1][s][a] + learning_rate * (r + discount_factor * np.max(q_next) - Q_table[1][s][a])
+        Q_table[s][a] = Q_table[s][a] + learning_rate * (r + discount_factor * np.max(q_next) - Q_table[s][a])
 
 
 def get_action(Q_table, action_space, ep, obs, no_of_agents):
@@ -123,39 +112,24 @@ def get_action(Q_table, action_space, ep, obs, no_of_agents):
 
     else:
         action_list = []
-        Q_pick = Q_table[0]
-        Q_drop = Q_table[1]
+
         for i in range(no_of_agents):
-            if obs[f"A_{i}"][1] == -1:
-                s = get_state_representation(obs, i, 'pick')
-                if s in Q_pick:
-                    where_max = np.where(Q_pick[s] == np.max(Q_pick[s]))[0]
-                    if len(where_max) == 1:
-                        a = where_max[0]
-                    else:
-                        a = np.random.choice(where_max)
-                    action_list.append(a)
+            s = get_state_representation(obs, i)
+            if s in Q_table:
+                where_max = np.where(Q_table[s] == np.max(Q_table[s]))[0]
+                if len(where_max) == 1:
+                    a = where_max[0]
                 else:
-                    action_list.append(random.randint(0, action_space - 1))
+                    a = np.random.choice(where_max)
+                action_list.append(a)
             else:
-                s = get_state_representation(obs, i, 'drop')
-                if s in Q_drop:
-                    where_max = np.where(Q_drop[s] == np.max(Q_drop[s]))[0]
-                    if len(where_max) == 1:
-                        a = where_max[0]
-                    else:
-                        a = np.random.choice(where_max)
-                    action_list.append(a)
-                else:
-                    action_list.append(random.randint(0, action_space - 1))
+                action_list.append(random.randint(0, action_space - 1))
+
     return action_list
 
 
-def get_state_representation(obs, i, task):
+def get_state_representation(obs, i):
     rep = np.array2string(obs[f"A_{i}"][0]) + ";"
-    if task == 'drop':
-        return rep
-
     j = obs[f"A_{i}"][2]
     if j == -1:
         return " "
@@ -164,9 +138,8 @@ def get_state_representation(obs, i, task):
 
 def test(test_env, action_space=4, q_path=None, verbose=False):
     # create lists to contain total rewards and steps per episode
-    QPickup = {}
-    QDrop = {}
-    Q_table = [QPickup, QDrop]
+
+    Q_table = {}
     # start_episode = 0
     if q_path is not None:
 

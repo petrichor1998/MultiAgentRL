@@ -47,8 +47,8 @@ def world_gen(n=10, goal_length=3, no_of_agents = 2):
                 coord_list.append(np.array([i, j], dtype=np.int))
 
     #Sampling locs for agents and gems
-    # locs = random.sample(coord_list, no_of_agents + goal_length)
-    locs =  [np.array([0, n-1]), np.array([n-1, 0]), np.array([3, 2]), np.array([5, 3]), np.array([9, 9])]
+    locs = random.sample(coord_list, no_of_agents + goal_length)
+    # locs =  [np.array([0, n-1]), np.array([n-1, 0]), np.array([3, 2]), np.array([5, 3]), np.array([9, 9])]
     # getting agent locs and assignment
     # obs_dict[f"A_{i}"] = [loc, acquired_gem_id/-1, to_acquire_gem_id/-1]
     for i in range(no_of_agents):
