@@ -167,6 +167,7 @@ def test(test_env, action_space=4, q_path=None, verbose=False):
     QPickup = {}
     QDrop = {}
     Q_table = [QPickup, QDrop]
+    episode_rewards = []
     # start_episode = 0
     if q_path is not None:
 
@@ -188,9 +189,10 @@ def test(test_env, action_space=4, q_path=None, verbose=False):
             test_env.render()
         s_prime = copy.deepcopy(test_env.obs_dict)
         s = copy.deepcopy(s_prime)
+        episode_rewards.append(test_env.total_reward)
     print(test_env.total_reward)
     cv2.destroyAllWindows()
 
-    return Q_table
+    return Q_table, episode_rewards
 
 

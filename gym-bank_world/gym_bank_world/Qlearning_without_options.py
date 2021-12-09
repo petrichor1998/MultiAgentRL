@@ -145,6 +145,8 @@ def test(test_env, action_space=4, q_path=None, verbose=False):
 
         Q_table = pkl.load(open(q_path, "rb"))
 
+    episode_rewards = []
+
     # Reset environment
     test_env.reset()
     if verbose:
@@ -161,9 +163,10 @@ def test(test_env, action_space=4, q_path=None, verbose=False):
             test_env.render()
         s_prime = copy.deepcopy(test_env.obs_dict)
         s = copy.deepcopy(s_prime)
+        episode_rewards.append(test_env.total_reward)
     print(test_env.total_reward)
     cv2.destroyAllWindows()
 
-    return Q_table
+    return Q_table, episode_rewards
 
 
